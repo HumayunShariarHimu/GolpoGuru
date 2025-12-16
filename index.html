@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GolpoGuru</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --bg-main: #01010a;
+  --bg-soft: #05051a;
+  --card-bg: #0c0c1f;
+  --accent-pink: #ff3df5;
+  --accent-cyan: #00fff0;
+  --accent-purple: #7a7cff;
+  --text-main: #f0f7ff;
+  --text-muted: #a0b0d0;
+}
+
+/* Reset & Body */
+* {margin:0;padding:0;box-sizing:border-box;}
+body {
+  font-family:"Noto Serif Bengali", serif;
+  background: radial-gradient(circle at top left, rgba(0,255,240,.08), transparent 50%),
+              radial-gradient(circle at bottom right, rgba(255,61,245,.08), transparent 50%),
+              linear-gradient(180deg,var(--bg-soft),var(--bg-main));
+  color: var(--text-main);
+  min-height:100vh;
+}
+
+/* Header */
+header {text-align:center; padding:40px 20px 15px;}
+header h1 {
+  font-size:2rem; font-weight:900; letter-spacing:1px;
+  color: var(--accent-cyan);
+}
+header p {margin-top:6px; font-size:0.95rem; color: var(--text-muted); letter-spacing:0.3px;}
+
+/* Nav & Search */
+nav {
+  display:flex; justify-content:center; margin-bottom:20px;
+}
+#searchBar {
+  padding:10px 18px; border-radius:24px; border:2px solid var(--accent-cyan);
+  background: rgba(12,12,31,0.85); color:#f0f7ff; font-size:0.95rem;
+  outline:none; min-width:250px; transition: border-color 0.3s, background 0.3s;
+}
+#searchBar::placeholder {color:var(--text-muted);}
+#searchBar:focus {border-color: var(--accent-pink); background: rgba(12,12,31,0.95);}
+
+/* Status */
+#status {text-align:center; margin-bottom:12px; font-size:14px; color: var(--text-muted);}
+
+/* Posts Grid */
+#posts {
+  max-width:1200px; margin:auto; padding:10px 15px 40px;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px;
+}
+
+/* Card */
+.card {
+  background: linear-gradient(145deg, rgba(12,12,31,0.95), rgba(14,14,42,0.95));
+  border-radius:24px; padding:20px;
+  cursor:pointer; border:1px solid rgba(122,124,255,.12);
+  transition: transform 0.3s, background 0.3s;
+}
+.card:hover {
+  transform: translateY(-5px) scale(1.02);
+  background: linear-gradient(145deg, rgba(0,255,240,.05), rgba(255,61,245,.05));
+}
+.card h2 {
+  font-size:1.35rem; font-weight:800;
+  color: var(--accent-pink); margin-bottom:10px;
+}
+
+/* Footer */
+footer {
+  margin-top:60px; padding:24px 15px; text-align:center; font-size:13.5px;
+  color: var(--text-muted); border-top:1px solid rgba(122,124,255,.12); background:#01010a;
+}
+
+/* Modal */
+.modal {position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.9);
+  display:none; align-items:center; justify-content:center; z-index:1000;
+}
+.modal-content {
+  background: linear-gradient(145deg, rgba(12,12,31,0.95), rgba(14,14,42,0.95));
+  border-radius:20px; padding:22px 26px; max-width:680px; max-height:75vh;
+  overflow-y:auto; color:#eef2ff; position:relative;
+}
+.modal-content h2 {margin-bottom:14px; font-size:1.5rem; color: var(--accent-cyan);}
+.modal-content button.close {position:absolute; top:10px; right:12px; background:red; color:#fff;
+  border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-weight:bold; font-size:16px;}
+
+/* Scroll Up */
+#scrollUp {position:fixed;right:20px;bottom:80px;width:48px;height:48px;
+  background:linear-gradient(145deg,var(--accent-pink),var(--accent-cyan));
+  border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  z-index:999;transition:.3s;}
+#scrollUp:hover {background:linear-gradient(145deg,var(--accent-purple),var(--accent-pink));}
+#scrollUp svg {width:24px;height:24px;fill:#fff;}
+
+@media(max-width:600px){
+  header h1 {font-size:1.6rem;} header p {font-size:0.85rem;}
+  #searchBar {font-size:0.85rem;}
+  .card h2 {font-size:1.2rem;}
+  .modal-content h2 {font-size:1.3rem;} .modal-content {padding:18px 20px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GolpoGuru</h1>
+  <p>গল্পের ভুবনে আপনাকে স্বাগতম</p>
+</header>
+
+<nav>
+  <input type="text" id="searchBar" placeholder="🔍 গল্পের নাম বা শব্দ লিখুন...">
+</nav>
+
+<div id="status">গল্প লোড হচ্ছে...</div>
+<div id="posts"></div>
+
+<footer>GolpoGuru © Humayun Shariar Himu</footer>
+
+<!-- Modal -->
+<div class="modal" id="storyModal">
+  <div class="modal-content">
+    <button class="close" onclick="closeModal()">×</button>
+    <h2 id="modalTitle"></h2>
+    <div id="modalText" style="line-height:1.8; font-size:0.95rem;"></div>
+  </div>
+</div>
+
+<button id="scrollUp" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24"><path d="M12 4l-8 8h6v8h4v-8h6z"/></svg>
+</button>
+
+<script>
+const owner = "HumayunShariarHimu";
+const repo = "GolpoGuru";
+const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
+let allCards = [];
+let lastRead = localStorage.getItem('lastReadStory') || null;
+
+async function fetchStoryFiles(){
+  const res = await fetch(apiUrl);
+  if(!res.ok) throw new Error("GitHub API সমস্যা");
+  const files = await res.json();
+  return files.filter(f => f.name.endsWith('.txt'));
+}
+
+async function fetchText(url){return await (await fetch(url)).text();}
+
+function createStoryCard(file){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h2>${file.name.replace('.txt','')}</h2>`;
+  card.onclick = async ()=>{
+    const text = await fetchText(file.download_url);
+    openModal(file.name.replace('.txt',''), text);
+    localStorage.setItem('lastReadStory', file.name);
+  };
+  return card;
+}
+
+function openModal(title,text){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalText').innerHTML=marked.parse(text);
+  document.getElementById('storyModal').style.display='flex';
+}
+
+function closeModal(){document.getElementById('storyModal').style.display='none';}
+
+(async()=>{
+  const posts=document.getElementById('posts');
+  const status=document.getElementById('status');
+  const searchInput = document.getElementById('searchBar');
+  try{
+    const files=await fetchStoryFiles();
+    status.textContent=`${files.length} টি গল্প পাওয়া গেছে`;
+    for(const file of files){
+      const card=createStoryCard(file);
+      posts.appendChild(card);
+      allCards.push(card);
+    }
+    status.textContent="✨ পড়ার জন্য প্রস্তুত";
+    if(lastRead){
+      const card=allCards.find(c=>c.querySelector('h2').textContent===lastRead.replace('.txt',''));
+      if(card) card.click();
+    }
+
+    // Search Filter
+    searchInput.addEventListener('input', e=>{
+      const q = e.target.value.toLowerCase();
+      allCards.forEach(c=>{
+        c.style.display = c.innerText.toLowerCase().includes(q) ? 'block':'none';
+      });
+    });
+  }catch(e){status.textContent="⚠ সমস্যা হয়েছে: "+e.message;}
+})();
+</script>
+</body>
+  </html>
